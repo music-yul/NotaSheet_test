@@ -518,7 +518,7 @@ ed.addEventListener('click',e=>{const node=e.target.closest('img,.document-textb
 objectBar.insertAdjacentHTML('beforeend','<label>글 배치 <select id="objectWrap"><option value="flow">자리 차지 · 본문 흐름</option><option value="left">왼쪽 배치 · 옆에 글</option><option value="right">오른쪽 배치 · 옆에 글</option><option value="front">글 앞으로 · 자유 이동</option><option value="behind">글 뒤로 · 자유 이동</option></select></label>');$('#objectWrap').onchange=e=>{if(!object)return;const v=e.target.value;object.dataset.wrap=v;object.style.float='';object.style.zIndex='';if(v==='front'||v==='behind'){floatObject();object.style.zIndex=v==='front'?'2':'-1'}else{object.style.position='';object.style.left='';object.style.top='';object.style.margin='0';if(v==='left'||v==='right'){object.style.float=v;object.style.margin=v==='left'?'4px 14px 8px 0':'4px 0 8px 14px'}}refresh();persist()};
 const oldShow=show;show=function(kind){if(kind==='image'){choose(selectedImage);return}return oldShow(kind)};
 function floatObject(){const r=object.getBoundingClientRect(),page=ed.getBoundingClientRect();if(object.style.position!=='absolute'){ed.append(object);Object.assign(object.style,{position:'absolute',left:(r.left-page.left)+'px',top:(r.top-page.top)+'px',width:r.width+'px',height:r.height+'px',margin:'0'})}return{left:parseFloat(object.style.left)||0,top:parseFloat(object.style.top)||0}}
-function gesture(e,corner){if(!object)return;e.preventDefault();const initial=object,r=object.getBoundingClientRect(),wrap=object.dataset.wrap||'flow',free=wrap==='front'||wrap==='behind',p=free?floatObject():{left:0,top:0},x=e.clientX,y=e.clientY;let finalX=x,finalY=y;const move=ev=>{if(object!==initial)return;finalX=ev.clientX;finalY=ev.clientY;const dx=finalX-x,dy=finalY-y;if(corner){const w=Math.max(20,r.width+(corner.includes('w')?-dx:dx)),h=Math.max(20,r.height+(corner.includes('n')?-dy:dy));object.style.width=w+'px';object.style.height=h+'px';if(object.matches('.score')){const list=[...object.querySelectorAll('svg')],total=list.reduce((n,v)=>n+(v.viewBox.baseVal.height||1),0);list.forEach(v=>{v.setAttribute('preserveAspectRatio','none');v.style.setProperty('height',h*(v.viewBox.baseVal.height||1)/total+'px','important')})}if(free&&corner.includes('w'))object.style.left=Math.max(0,p.left+r.width-w)+'px';if(free&&corner.includes('n'))object.style.top=Math.max(0,p.top+r.height-h)+'px'}else if(free){object.style.left=Math.max(0,Math.min(ed.clientWidth-20,p.left+dx))+'px';object.style.top=Math.max(0,p.top+dy)+'px'}else{object.style.transform='translate('+dx+'px,'+dy+'px)';object.style.opacity='.6'}refresh()};const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);if(!corner&&!free){object.style.transform='';object.style.opacity='';object.style.position='';object.style.left='';object.style.top='';const candidates=[...ed.children].filter(n=>n!==object&&!n.contains(object));const next=candidates.find(n=>{const b=n.getBoundingClientRect();return finalY<b.top+b.height/2});if(next)next.before(object);else ed.append(object)}refresh();persist()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true})}
+function gesture(e,corner){if(!object)return;e.preventDefault();const initial=object,r=object.getBoundingClientRect(),wrap=object.dataset.wrap||'flow',free=wrap==='front'||wrap==='behind',p=free?floatObject():{left:0,top:0},x=e.clientX,y=e.clientY;let finalX=x,finalY=y;const move=ev=>{if(object!==initial)return;finalX=ev.clientX;finalY=ev.clientY;const dx=finalX-x,dy=finalY-y;if(!corner)try{window.__nsxCellHi&&window.__nsxCellHi(window.__nsxCellAt&&window.__nsxCellAt(object,finalX,finalY))}catch(_){}if(corner){const w=Math.max(20,r.width+(corner.includes('w')?-dx:dx)),h=Math.max(20,r.height+(corner.includes('n')?-dy:dy));object.style.width=w+'px';object.style.height=h+'px';if(object.matches('.score')){const list=[...object.querySelectorAll('svg')],total=list.reduce((n,v)=>n+(v.viewBox.baseVal.height||1),0);list.forEach(v=>{v.setAttribute('preserveAspectRatio','none');v.style.setProperty('height',h*(v.viewBox.baseVal.height||1)/total+'px','important')})}if(free&&corner.includes('w'))object.style.left=Math.max(0,p.left+r.width-w)+'px';if(free&&corner.includes('n'))object.style.top=Math.max(0,p.top+r.height-h)+'px'}else if(free){object.style.left=Math.max(0,Math.min(ed.clientWidth-20,p.left+dx))+'px';object.style.top=Math.max(0,p.top+dy)+'px'}else{object.style.transform='translate('+dx+'px,'+dy+'px)';object.style.opacity='.6'}refresh()};const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);try{window.__nsxCellHi&&window.__nsxCellHi(null)}catch(_){}if(!corner&&(finalX!==x||finalY!==y)&&window.__nsxCellDrop&&window.__nsxCellDrop(object,finalX,finalY)){refresh();persist();return}if(!corner&&!free){object.style.transform='';object.style.opacity='';object.style.position='';object.style.left='';object.style.top='';const candidates=[...ed.children].filter(n=>n!==object&&!n.contains(object));const next=candidates.find(n=>{const b=n.getBoundingClientRect();return finalY<b.top+b.height/2});if(next)next.before(object);else ed.append(object)}refresh();persist()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true})}
 ed.addEventListener('pointerdown',e=>{if(e.target.tagName==='IMG'){choose(e.target);gesture(e,null)}});ed.addEventListener('dragstart',e=>{if(e.target.tagName==='IMG')e.preventDefault()});$('#objectMove').onpointerdown=e=>gesture(e,null);frame.querySelectorAll('[data-corner]').forEach(h=>h.onpointerdown=e=>gesture(e,h.dataset.corner));moveHandle.onpointerdown=e=>gesture(e,null);
 ['objectW','objectH'].forEach((id,i)=>$('#'+id).oninput=e=>{if(!object)return;object.style[i?'height':'width']=Math.max(20,Math.min(i?2400:1600,+e.target.value||20))+'px';refresh();persist()});
 $('#objectDelete').onclick=()=>{if(object){object.remove();choose(null);persist()}};$('#objectFlow').onclick=()=>{if(!object)return;object.dataset.wrap='flow';object.style.float='';object.style.zIndex='';$('#objectWrap').value='flow';object.style.position='';object.style.left='';object.style.top='';refresh();persist()};
@@ -1245,6 +1245,8 @@ const NOTA_LINKS={
   const calc=(x,y)=>{
    ghost.style.left=(x-dx)+'px';ghost.style.top=(y-dy)+'px';
    const ed=E(),er=ed.getBoundingClientRect();ghost.hidden=true;const el=document.elementFromPoint(x,y);ghost.hidden=false;
+   const cell=el&&el.closest?el.closest('#editor td,#editor th'):null;
+   if(cell&&!sel.contains(cell)){drop={cell};bar.style.display='none';try{window.__nsxCellHi(cell)}catch(_){}return}try{window.__nsxCellHi(null)}catch(_){}
    const blk=el&&el.closest?el.closest('#editor > *'):null;
    if(!blk){drop=null;bar.style.display='none';return}
    const br=blk.getBoundingClientRect(),after=y>br.top+br.height/2,ratio=(x-er.left)/er.width,align=ratio<.33?'left':ratio>.66?'right':'center';
@@ -1257,6 +1259,7 @@ const NOTA_LINKS={
   document.addEventListener('pointermove',move);document.addEventListener('pointerup',up);calc(e.clientX,e.clientY);
  }
  function apply(d){
+  try{window.__nsxCellHi(null)}catch(_){}if(d.cell){if(window.__nsxCellDrop(sel,0,0,d.cell)){try{persist()}catch(e){}window.dispatchEvent(new Event('resize'))}return}
   const o=sel,unit=o.closest('#editor > *');let node=o;
   if(unit&&unit!==o){const only=[...unit.childNodes].every(n=>n===o||n.nodeName==='BR'||(n.nodeType===3&&!n.textContent.trim()));
    if(only)node=unit;else{const p=document.createElement('p');p.append(o);node=p}}
@@ -2874,5 +2877,34 @@ body.nsx-collapsed #nsxSideOpen{display:grid}
   /* 시작 창이 열릴 때 닫기 버튼 대신 창 자체에 초점 (닫기 버튼에 테두리가 생기던 문제) */
   const st=document.getElementById('nsStart');if(st){const o=st.showModal.bind(st);st.showModal=function(){o();fix();st.setAttribute('tabindex','-1');st.focus({preventScroll:true})}}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
+})();
+</script>
+<style id="nsx-celldrop-css">
+#editor td.nsx-cell-hi,#editor th.nsx-cell-hi{outline:2px dashed #3a6fb0;outline-offset:-3px;background:#3a6fb014}
+#editor td img,#editor th img{max-width:100%;height:auto}
+#editor td .score,#editor th .score{max-width:100%}
+</style>
+<script id="nsx-celldrop-js">
+/* 표 칸 안에 그림·악보 넣기: 끌어서 칸 위에 놓으면 그 칸 안으로 들어가요. 칸 안에서 넣으면 빈 줄 없이 들어가요. */
+(()=>{
+ const E=()=>document.getElementById('editor');
+ let hi=null;
+ window.__nsxCellHi=td=>{if(hi&&hi!==td)hi.classList.remove('nsx-cell-hi');hi=td||null;if(hi)hi.classList.add('nsx-cell-hi')};
+ window.__nsxCellAt=(o,x,y)=>{if(!o)return null;const pe=o.style.pointerEvents,vi=o.style.visibility;o.style.pointerEvents='none';o.style.visibility='hidden';let el=null;try{el=document.elementFromPoint(x,y)}finally{o.style.pointerEvents=pe;o.style.visibility=vi}
+  const td=el&&el.closest?el.closest('td,th'):null;if(!td||!E()||!E().contains(td)||o.contains(td))return null;return td};
+ window.__nsxCellDrop=(o,x,y,cell)=>{const td=cell||window.__nsxCellAt(o,x,y);if(!td)return false;
+  const oldP=o.parentElement;
+  Object.assign(o.style,{position:'',left:'',top:'',zIndex:'',transform:'',opacity:'',float:'none',margin:'4px auto'});o.dataset.wrap='flow';
+  if(o.matches('img')){o.style.display='block';o.style.maxWidth='100%';const cw=Math.max(40,td.clientWidth-12),w=parseFloat(o.style.width);if(o.style.width&&!/%$/.test(o.style.width)&&w>cw){const h=parseFloat(o.style.height);o.style.width=cw+'px';if(h)o.style.height=Math.round(h*cw/w)+'px'}}
+  const empty=[...td.childNodes].every(n=>n.nodeName==='BR'||(n.nodeType===3&&!n.textContent.trim())||(n.nodeName==='P'&&!n.textContent.trim()&&!n.querySelector('img,svg,.score,table')));
+  if(empty)td.innerHTML='';
+  const p=document.createElement('p');p.style.margin='0';p.append(o);td.append(p);
+  if(oldP&&oldP!==td&&oldP!==p&&oldP.matches&&oldP.matches('p')&&!oldP.textContent.trim()&&!oldP.querySelector('img,svg,.score,table')){const nx=oldP.nextElementSibling;oldP.remove();if(nx&&nx.matches('p')&&!nx.textContent.trim()&&!nx.querySelector('img,svg,.score,table')&&nx.previousElementSibling&&nx.previousElementSibling.matches('p')&&!nx.previousElementSibling.textContent.trim())nx.remove()}
+  try{toast('표 칸 안에 넣었어요')}catch(_){}
+  return true};
+ /* 칸 안에 커서를 두고 넣을 때는 뒤에 붙는 빈 줄을 빼요 */
+ const wrap=()=>{const o=window.insert;if(typeof o!=='function'||o.__cell)return;const w=function(html){try{const r=(typeof range!=='undefined')?range:null,n=r&&r.startContainer,el=n&&(n.nodeType===3?n.parentElement:n),td=el&&el.closest&&el.closest('#editor td,#editor th');
+   if(td&&typeof html==='string'&&/<img/.test(html)){html=html.replace(/<p><br><\/p>\s*$/,'').replace(/^<p>/,'<p style="margin:0">')}}catch(_){}return o.apply(this,[html].concat([].slice.call(arguments,1)))};w.__cell=1;window.insert=w};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wrap);else wrap();setTimeout(wrap,800);
 })();
 </script>
