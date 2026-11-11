@@ -1424,11 +1424,11 @@ function rowsOf(ms0){const ms=ms0||S.measures;
   if(mi>0&&!S.free){const tc=timeAt(S,mi).join()!==timeAt(S,mi-1).join();if(tc)ex+=34;if(!first){if(std&&keyAt(S,mi)!==keyAt(S,mi-1))ex+=14+kk*11+Math.abs(KEYN[keyAt(S,mi-1)]||0)*9;if(std&&clefAt(S,mi)!==clefAt(S,mi-1))ex+=30}}
   return Math.max(S.fixed?130:80,Math.max(evN(mm.ev),evN(mm.ev2))*34+44+(S.cdg?mm.ev.filter(e=>e.cd).length*24:0))+(first?50+kk*11+(s0?34:0):0)+ex};
  /* 드럼 악보: 기본 한 줄에 4마디. 자리가 모자라면 악보 전체(음표·오선)를 작게 그려서 맞춰요 */
- const DR=S.sv?S.sv.some(q=>(q.ty||S.bty)==='drum'):S.stype==='drum',MPL=__nsxMpl()||(DR?4:0);
+ const DR=S.sv?S.sv.some(q=>(q.ty||S.bty)==='drum'):S.stype==='drum',UM=__nsxMpl(),FORCE=!!UM||DR,MPL=UM||4;
  const rows=[];let row=[],x=0;
- ms.forEach((mm,mi)=>{let w=wid(mm,!row.length,!rows.length,mi);if(row.length&&(MPL?(row.length>=MPL||(!DR&&(x+w)*0.62>PW)):x+w>PW)){rows.push(row);row=[];x=0;w=wid(mm,true,false,mi)}row.push({m:mi,from:0,to:mm.ev.length,w});x+=w});
+ ms.forEach((mm,mi)=>{let w=wid(mm,!row.length,!rows.length,mi);if(row.length&&(row.length>=MPL||(!FORCE&&x+w>PW*1.3))){rows.push(row);row=[];x=0;w=wid(mm,true,false,mi)}row.push({m:mi,from:0,to:mm.ev.length,w});x+=w});
  if(row.length)rows.push(row);
- let Z=1;if(DR){const mx=Math.max(...rows.map(rw=>rw.reduce((a,q)=>a+q.w,0)));if(mx>PW)Z=Math.max(.7,PW/mx)}window.__nsxZ=Z;const LW=PW/Z;
+ let Z=1;if(FORCE){const mx=Math.max(...rows.map(rw=>rw.reduce((a,q)=>a+q.w,0)));if(mx>PW)Z=Math.max(UM?.55:.7,PW/mx)}window.__nsxZ=Z;const LW=PW/Z;
  rows.forEach((row,ri)=>{const tot=row.reduce((a,r)=>a+r.w,0);if(ri<rows.length-1||tot>LW){row.forEach(r=>{r.w*=LW/tot})}});
  return rows}
 /* 위쪽 기호(1번 괄호·세뇨·빠르기말)가 많은 줄은 그 줄 위 여백을 늘림. out[i+1] = 줄 i까지의 누적 추가 높이 */
@@ -3470,7 +3470,7 @@ body[data-kind=std] #pal .pc .psec .jgonly,body[data-kind=tab6] #pal .pc .psec .
   const box=document.createElement('div');box.className='nsx-lay';
   const stp=(k,l,ds)=>'<div class="row" data-row="'+k+'"><span class="nm">'+l+'</span><span class="stp3"><button type="button" data-k="'+k+'" data-v="-1" aria-label="'+l+' 줄이기">−</button><b></b><button type="button" data-k="'+k+'" data-v="1" aria-label="'+l+' 늘리기">+</button></span><span class="ds">'+ds+'</span></div>';
   box.innerHTML='<div class="nsx-tyh" style="padding-top:0">간격 · 여백</div>'+
-   stp('mpl','한 줄 최대 마디 수','음표가 많아 넘치면 다음 줄로 넘겨요 (잘리지 않게)')+stp('rg','줄 사이 간격','악보 줄과 줄 사이')+stp('sg','보표 사이 간격','한 줄 안 보표끼리 (보표가 2개 이상일 때)')+stp('m','바깥 여백','문서에 넣을 때 악보 둘레 공간')+
+   stp('mpl','한 줄 마디 수','자동: 4마디씩, 음표가 많으면 줄여요 · 숫자: 간격을 좁혀서라도 그 수만큼')+stp('rg','줄 사이 간격','악보 줄과 줄 사이')+stp('sg','보표 사이 간격','한 줄 안 보표끼리 (보표가 2개 이상일 때)')+stp('m','바깥 여백','문서에 넣을 때 악보 둘레 공간')+
    '<div class="foot"><span>파란 점선이 문서에 들어갈 범위예요</span><button type="button" data-reset="1">기본값</button></div>';
   {const sb=d.querySelector('.sb'),st=sb.querySelector('details.psec[data-k="staves"]');if(st)sb.insertBefore(box,st);else sb.append(box)}
   box.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();
@@ -3882,7 +3882,7 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
   act(()=>{const a=[];let c=0;g.slice(0,-1).forEach(x=>{c+=x;a.push(c*S.gs)});S.jmk=a.filter(q=>q>0&&q<S.gb*S.gs)})}
  const grpStr=()=>{const n=S.gb*S.gs,mk=(S.jmk||[]).filter(q=>q>0&&q<n).sort((a,b)=>a-b);if(!mk.length)return String(S.gb);const out=[];let p=0;mk.concat([n]).forEach(q=>{out.push(Math.round((q-p)/S.gs));p=q});return out.join('+')};
  function addInputs(){
-  const gt=document.getElementById('g-time');if(gt&&!gt.querySelector('.tcus'))gt.insertAdjacentHTML('beforeend','<div class="tcus"><input id="nsxTsIn" placeholder="직접: 20/8 · 3+3+2/8" aria-label="박자표 직접 입력"><button type="button" data-tsgo>적용</button></div><div class="tch">위 숫자를 + 로 나누면 대강(박 묶음)이 되고, 박자표와 음표 묶기도 그대로 따라가요.</div>');
+  const gt=document.getElementById('g-time');if(gt&&!(gt.closest('details')||gt).querySelector('.tcus'))gt.insertAdjacentHTML('beforeend','<div class="tcus"><input id="nsxTsIn" placeholder="직접: 20/8 · 3+3+2/8" aria-label="박자표 직접 입력"><button type="button" data-tsgo>적용</button></div><div class="tch">위 숫자를 + 로 나누면 대강(박 묶음)이 되고, 박자표와 음표 묶기도 그대로 따라가요.</div>');
   ['g-gd','g-jgb'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.querySelector('.tcus')){const lab=id==='g-jgb'?'정 수 · 대강':'박 수 · 대강';el.insertAdjacentHTML('beforeend','<div class="sub">'+lab+' 직접 입력</div><div class="tcus"><input data-gin placeholder="예: 10 · 20 · 3+2+2+3" aria-label="'+lab+' 직접 입력"><button type="button" data-ggo>적용</button></div><div class="tch">숫자 하나는 '+(id==='g-jgb'?'정':'박')+' 수, + 로 나누면 대강(굵은 '+(id==='g-jgb'?'마디금':'세로줄')+')까지 한 번에 정해져요.</div>')}});
   const gs=document.getElementById('g-sg');if(gs&&!gs.querySelector('.sgj')){const SGBT=id=>'<button data-sg="'+id+'" class="sgb" title="'+esc(SGI[id][0])+'"><svg class="gl" viewBox="0 0 22 22" width="26" height="26" fill="none" stroke="currentColor" stroke-width="'+(SGI[id][2]||2)+'" stroke-linecap="round" stroke-linejoin="round">'+sgPathEl(id)+'</svg><span class="kl">'+SGSHORT[id]+'</span></button>';
    gs.insertAdjacentHTML('beforeend','<div class="sgj">'+SGGRP.map(g=>'<div class="sgjh">'+g[0]+' (정간보)</div><div class="grid g4">'+g[1].map(SGBT).join('')+'</div>').join('')+'</div>')}}
@@ -3938,8 +3938,6 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
  const PK={0:'없음',8:'8분음표',16:'4분음표',24:'점4분음표',32:'2분음표',48:'점2분음표'};
  const SPEC=[
   
-  ['clef','[data-clef]','음자리표',b=>b.title||b.textContent.trim()],
-  ['key','[data-key]','조표',b=>{const k=b.dataset.key,nm=k.replace('#','♯').replace(/^(.)b$/,'$1♭'),m=(b.title||'').match(/(샵|플랫) (\d)개/);return nm+'장조'+(m?' ('+(m[1]==='샵'?'♯':'♭')+m[2]+')':'')}],
   ['time','[data-time]','박자표',b=>{const t=b.dataset.time;return t==='free'?'박자 없음':t==='C'?'C (4/4)':t==='C|'?'C| (2/2)':t}],
   ['gd','[data-gjp]','자주 쓰는 장단',b=>b.textContent.trim(),'선택'],
   ['jjd','[data-jjp]','자주 쓰는 장단',b=>b.textContent.trim(),'선택'],
@@ -3947,9 +3945,7 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
   ['meas','[data-meas="auto"],[data-meas="4"],[data-meas="8"],[data-meas="12"],[data-meas="16"]','마디 수',b=>b.dataset.meas==='auto'?'자동':b.textContent.trim()],
   ['meas','[data-pk]','못갖춘마디',b=>(PK[b.dataset.pk]||b.dataset.pk)],
   ['meask','[data-meas="auto"],[data-meas="4"],[data-meas="8"],[data-meas="12"],[data-meas="16"]','마디 수',b=>b.dataset.meas==='auto'?'자동':b.textContent.trim()],
-  ['staves','[data-sa],[data-sp]','더 추가',b=>b.textContent.trim().replace(/^\+\s*/,''),'보표 선택',true],
-  ['staves','[data-sb]','연결 모양',b=>b.textContent.trim()],
-  ['pair','[data-pa]','더 추가',b=>({jangdan:'장단보',rhythm:'단선보',std:'오선보',drum:'드럼 악보',tab6:'기타 타브',tab4:'우쿨렐레 타브'})[b.dataset.pa]||b.textContent.trim(),'악보 선택',true]];
+  ['staves','[data-sb]','연결 모양',b=>b.textContent.trim()]];
  const FOLD=['gjd'];
  const secOf=k=>document.querySelector('#nsxSetup details.psec[data-k="'+k+'"]');
  function build(){const dlg=document.getElementById('nsxSetup');if(!dlg)return;
@@ -3985,7 +3981,7 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
 /* 악보 설정 창: 순서 · 이름 정리 · 체크하면 악보에 추가 */
 (()=>{
  const ORDER=['clef','key','time','gjd','gd','jjd','meas','meask','jgb','hd','staves','pair','nn','cvlay'];
- const NAME={clef:'음자리표',key:'조표',time:'박자표',gjd:'장단',gd:'장단',jjd:'장단',meas:'마디',meask:'마디',jgb:'정간보',hd:'제목',staves:'보표 추가 (대보표)',pair:'병기',nn:'음표 숨기기 (가사·코드만)',cvlay:'간격 · 여백'};
+ const NAME={clef:'음자리표',key:'조표',time:'박자표',gjd:'장단',gd:'장단',jjd:'장단',meas:'마디',meask:'마디',jgb:'정간보',hd:'제목',staves:'보표 추가',pair:'병기',nn:'음표 숨기기',cvlay:'간격 · 여백'};
  const NOTE={staves:'체크하면 낮은음자리표 보표가 붙어 대보표가 돼요. 체크를 풀면 추가한 보표가 지워져요.',pair:'체크하면 다른 종류의 악보를 아래에 함께 적어요. 체크를 풀면 병기한 악보가 지워져요.',nn:'체크하면 인쇄·문서에서 음표와 쉼표가 숨겨지고 가사와 코드만 보여요. 편집 화면에서는 옅게 보여요.'};
  const sec=k=>document.querySelector('#nsxSetup details.psec[data-k="'+k+'"]');
  const T0=()=>S.sv?((S.sv[0].ty&&S.sv[0].ty!=='jangdan')?S.sv[0].ty:(S.sv[0].ty==='jangdan'?'jangdan':S.bty)):S.stype;
@@ -4008,7 +4004,7 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
   if(!ok){want.forEach(c=>sb.append(c));rest.forEach(c=>sb.append(c))}
   /* 이름 · 체크 */
   ORDER.forEach(k=>{const d=sec(k)||(k==='cvlay'?dlg.querySelector('.cvlay'):null);if(!d)return;if(NAME[k])setName(d,k);
-   if(CK[k]){const sm=d.querySelector(':scope>summary');if(!sm.querySelector('.cvck')){const c=document.createElement('input');c.type='checkbox';c.className='cvck';c.setAttribute('aria-label',NAME[k]);sm.insertBefore(c,sm.firstChild);
+   if(false&&CK[k]){const sm=d.querySelector(':scope>summary');if(!sm.querySelector('.cvck')){const c=document.createElement('input');c.type='checkbox';c.className='cvck';c.setAttribute('aria-label',NAME[k]);sm.insertBefore(c,sm.firstChild);
      c.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();const want=!CK[k].get();try{want?CK[k].on():CK[k].off()}catch(err){console.warn(err)}setTimeout(()=>{const on=CK[k].get();c.checked=on;d.open=on},30)});
      d.open=CK[k].get()}
     if(NOTE[k]&&!d.querySelector('.cvnote')){const n=document.createElement('div');n.className='cvnote';n.textContent=NOTE[k];sm.after(n)}}});
@@ -4018,5 +4014,76 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
  const hook=()=>{try{build()}catch(e){console.warn(e)}const o=window.syncUI;if(typeof o==='function'&&!o.__v17){const w=function(){const r=o.apply(this,arguments);try{build()}catch(_){}return r};w.__v17=1;Object.keys(o).forEach(k=>{try{w[k]=o[k]}catch(_){}});window.syncUI=w}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(hook,900));else setTimeout(hook,900);
  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#nsxSetupBtn'))setTimeout(()=>{try{build()}catch(_){}},80)},true);
+})();
+</script>
+<style id="nsx-v18-css">
+/* 음자리표·조표 그림 버튼: 작게 한 줄(또는 두 줄)로 */
+#nsxSetup details[data-k="clef"] .grid{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:4px!important}
+#nsxSetup details[data-k="key"] .grid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:4px!important}
+#nsxSetup details[data-k="clef"] .grid>button,#nsxSetup details[data-k="key"] .grid>button{height:auto!important;min-height:0!important;padding:2px!important;display:flex!important;align-items:center;justify-content:center}
+#nsxSetup details[data-k="clef"] .grid>button{height:44px!important}
+#nsxSetup details[data-k="key"] .grid>button{height:32px!important}
+#nsxSetup details[data-k="clef"] .grid>button svg,#nsxSetup details[data-k="key"] .grid>button svg,#nsxSetup details[data-k="clef"] .grid>button img,#nsxSetup details[data-k="key"] .grid>button img{max-height:100%;max-width:100%;width:auto!important;height:auto!important}
+#nsxSetup [data-clef]{width:68px!important;height:50px!important;padding:2px!important}
+#nsxSetup [data-key]{width:66px!important;height:36px!important;padding:2px!important}
+#nsxSetup [data-clef] svg{height:44px!important;width:auto!important;max-width:100%}
+#nsxSetup [data-key] svg{height:30px!important;width:auto!important;max-width:100%}
+/* 한 줄로 묶기 */
+#nsxSetup .cvline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:4px 0}
+#nsxSetup .cvline .cvrow{margin:0;flex:0 0 auto}
+#nsxSetup .cvline .cvrow>span{min-width:0}
+#nsxSetup .cvline .cvrow select{flex:0 0 auto;width:auto;min-width:84px;max-width:150px}
+#nsxSetup .cvline .tcus{margin:0;flex:0 0 auto;grid-column:auto}
+#nsxSetup .cvline .tcus input{width:120px;flex:0 0 auto}
+#nsxSetup .cvline .cvbtns{margin:0}
+#nsxSetup .mcount{font-size:11.5px;color:#8a94a6;margin:2px 0 4px}
+/* 제목: 제목·부제 한 줄, 작사·작곡·편곡 한 줄 */
+#nsxSetup .hdf{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:4px 10px}
+#nsxSetup .hdf label{grid-column:span 2!important}
+#nsxSetup .hdf label:nth-child(1),#nsxSetup .hdf label:nth-child(2){grid-column:span 3!important}
+#nsxSetup .hdf span{flex:0 0 auto;width:auto;min-width:24px}
+#nsxSetup details[data-k="staves"] .cvrow select{flex:0 0 auto;width:auto;min-width:130px}
+/* 체크 목록 */
+#nsxSetup .cvopts{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 4px}
+#nsxSetup .cvopts label{display:flex;align-items:center;gap:6px;font-size:13px;color:#253042;cursor:pointer}
+#nsxSetup .cvopts input{width:16px;height:16px;accent-color:#354968;cursor:pointer}
+#nsxSetup .cvopts .na{font-size:12px;color:#8a94a6}
+#nsxSetup [data-nn],#nsxSetup details[data-k="staves"] [data-sk],#nsxSetup details[data-k="staves"] .sub,#nsxSetup details[data-k="staves"] [data-sa],#nsxSetup details[data-k="staves"] [data-sp],#nsxSetup details[data-k="staves"] [data-sd],#nsxSetup details[data-k="pair"] [data-pa],#nsxSetup details[data-k="pair"] [data-sd],#nsxSetup details[data-k="pair"] [data-sk]{display:none!important}
+</style>
+<script id="nsx-v18-js">
+(()=>{
+ const sec=k=>document.querySelector('#nsxSetup details.psec[data-k="'+k+'"]');
+ const T0=()=>S.sv?(S.sv[0].ty||S.bty):S.stype;
+ const tyK=k=>S.sv[k].ty||S.bty;
+ const NM={jangdan:'장단보',rhythm:'단선보',std:'오선보',drum:'드럼 악보',tab6:'기타 타브',tab4:'우쿨렐레 타브'};
+ const extras=c=>S.sv?S.sv.map((q,k)=>k).filter(k=>k>0&&T0()==='std'&&tyK(k)==='std'&&S.sv[k].clef===c):[];
+ const pairs=t=>S.sv?S.sv.map((q,k)=>k).filter(k=>k>0&&tyK(k)===t&&t!==T0()):[];
+ const hasNotes=k=>S.sv[k].measures.some(m=>(m.ev||[]).some(e=>!e.rest));
+ function drop(ks,what){if(!ks.length)return;if(ks.some(hasNotes)&&!confirm(what+'에 적은 내용도 함께 지워져요. 지울까요?'))return;act(()=>{for(let i=ks.length-1;i>=0;i--){removeStaff(S,ks[i]);if(!S.sv)break}sel=null;inp=null})}
+ const toFirst=()=>{if(S.sv&&S.act!==0){S.act=0;sel=null}};
+ const OPTS={
+  staves:()=>T0()!=='std'?null:[
+   {label:'낮은음자리표 보표 (대보표)',get:()=>extras('bass').length>0,on:()=>{toFirst();if(!S.sv)staffPiano();else staffAdd('bass')},off:()=>drop(extras('bass'),'낮은음자리표 보표')},
+   {label:'높은음자리표 보표',get:()=>extras('treble').length>0,on:()=>{toFirst();staffAdd('treble')},off:()=>drop(extras('treble'),'높은음자리표 보표')}],
+  pair:()=>['jangdan','rhythm','std','drum','tab6','tab4'].filter(t=>t!==T0()).map(t=>({label:NM[t],get:()=>pairs(t).length>0,on:()=>pairAdd(t),off:()=>drop(pairs(t),NM[t])})),
+  nn:()=>[{label:'음표·쉼표 숨기기 (가사·코드만 보이기)',get:()=>!!S.nn,on:()=>act(()=>{S.nn=1}),off:()=>act(()=>{S.nn=undefined})}]};
+ function opts(k){const d=sec(k);if(!d)return;const sm=d.querySelector(':scope>summary');let box=d.querySelector(':scope>.cvopts');if(!box){box=document.createElement('div');box.className='cvopts';sm.after(box)}
+  const list=OPTS[k]();const sig=list?list.map(o=>o.label).join('|'):'na';
+  if(box.dataset.sig!==sig){box.dataset.sig=sig;box.innerHTML=list?list.map((o,i)=>'<label><input type="checkbox" data-i="'+i+'">'+o.label+'</label>').join(''):'<span class="na">오선보에서 쓸 수 있어요</span>';
+   box.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{const o=OPTS[k]()[+inp.dataset.i];if(!o)return;try{inp.checked?o.on():o.off()}catch(err){console.warn(err)}setTimeout(sync,40)}))}
+  if(list)box.querySelectorAll('input').forEach(inp=>{const o=list[+inp.dataset.i];if(o)inp.checked=o.get()})}
+ function sync(){['staves','pair','nn'].forEach(opts)}
+ function lines(){
+  /* 박자표: 드롭다운 + 직접 입력 + 적용 한 줄 */
+  const ts=sec('time');if(ts&&!ts.querySelector('.cvline')){const r=ts.querySelector('.cvrow'),c=ts.querySelector('.tcus');if(r&&c){const ln=document.createElement('div');ln.className='cvline';r.before(ln);ln.append(r,c)}}
+  /* 마디: 마디 수 · +/− · 못갖춘마디 한 줄, 현재 상태는 아랫줄 */
+  ['meas','meask'].forEach(k=>{const d=sec(k);if(!d||d.querySelector('.cvline'))return;const rs=[...d.querySelectorAll('.cvrow')],bt=d.querySelector('.cvbtns');if(!rs.length)return;const ln=document.createElement('div');ln.className='cvline';rs[0].before(ln);ln.append(rs[0]);if(bt)ln.append(bt);if(rs[1])ln.append(rs[1]);const mc=d.querySelector('.mcount');if(mc)ln.after(mc)});
+  ['meas','meask'].forEach(k=>{const d=sec(k);if(!d)return;d.querySelectorAll('.cvbtns [data-meas="+"]').forEach(b=>b.textContent='+ 마디');d.querySelectorAll('.cvbtns [data-meas="-"]').forEach(b=>b.textContent='− 마디')});
+ }
+ function build(){const dlg=document.getElementById('nsxSetup');if(!dlg)return;lines();sync();
+  if(!dlg.dataset.cvFold2){dlg.dataset.cvFold2='1';['hd','staves','pair','nn','gjd'].forEach(k=>{const s=sec(k);if(s)s.open=false});const lay=dlg.querySelector('.cvlay');if(lay)lay.open=false}}
+ const hook=()=>{try{build()}catch(e){console.warn(e)}const o=window.syncUI;if(typeof o==='function'&&!o.__v18){const w=function(){const r=o.apply(this,arguments);try{build()}catch(_){}return r};w.__v18=1;Object.keys(o).forEach(k=>{try{w[k]=o[k]}catch(_){}});window.syncUI=w}};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(hook,1100));else setTimeout(hook,1100);
+ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#nsxSetupBtn'))setTimeout(()=>{try{build()}catch(_){}},120)},true);
 })();
 </script>
