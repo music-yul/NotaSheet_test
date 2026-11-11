@@ -3944,7 +3944,7 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
   ['gjd','[data-gjp]','장단',b=>b.textContent.trim(),'없음'],
   ['meas','[data-meas="auto"],[data-meas="4"],[data-meas="8"],[data-meas="12"],[data-meas="16"]','마디 수',b=>b.dataset.meas==='auto'?'자동':b.textContent.trim()],
   ['meas','[data-pk]','못갖춘마디',b=>(PK[b.dataset.pk]||b.dataset.pk)],
-  ['meask','[data-meas="auto"],[data-meas="4"],[data-meas="8"],[data-meas="12"],[data-meas="16"]','마디 수',b=>b.dataset.meas==='auto'?'자동':b.textContent.trim()],
+  ['meask','[data-meas="auto"],[data-meas="4"],[data-meas="8"],[data-meas="12"],[data-meas="16"]','장단 수',b=>b.dataset.meas==='auto'?'자동':b.textContent.trim()],
   ['staves','[data-sb]','연결 모양',b=>b.textContent.trim()]];
  const FOLD=['gjd'];
  const secOf=k=>document.querySelector('#nsxSetup details.psec[data-k="'+k+'"]');
@@ -3981,7 +3981,7 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
 /* 악보 설정 창: 순서 · 이름 정리 · 체크하면 악보에 추가 */
 (()=>{
  const ORDER=['clef','key','time','gjd','gd','jjd','meas','meask','jgb','hd','staves','pair','nn','cvlay'];
- const NAME={clef:'음자리표',key:'조표',time:'박자표',gjd:'장단',gd:'장단',jjd:'장단',meas:'마디',meask:'마디',jgb:'정간보',hd:'제목',staves:'보표 추가',pair:'병기',nn:'음표 숨기기',cvlay:'간격 · 여백'};
+ const NAME={clef:'음자리표',key:'조표',time:'박자표',gjd:'장단',gd:'장단',jjd:'장단',meas:'마디',meask:'장단 수',jgb:'정간보',hd:'제목',staves:'보표 추가',pair:'병기',nn:'음표 숨기기',cvlay:'간격 · 여백'};
  const NOTE={staves:'체크하면 낮은음자리표 보표가 붙어 대보표가 돼요. 체크를 풀면 추가한 보표가 지워져요.',pair:'체크하면 다른 종류의 악보를 아래에 함께 적어요. 체크를 풀면 병기한 악보가 지워져요.',nn:'체크하면 인쇄·문서에서 음표와 쉼표가 숨겨지고 가사와 코드만 보여요. 편집 화면에서는 옅게 보여요.'};
  const sec=k=>document.querySelector('#nsxSetup details.psec[data-k="'+k+'"]');
  const T0=()=>S.sv?((S.sv[0].ty&&S.sv[0].ty!=='jangdan')?S.sv[0].ty:(S.sv[0].ty==='jangdan'?'jangdan':S.bty)):S.stype;
@@ -4078,12 +4078,108 @@ main{background:var(--nsx-canvas)!important;padding:22px 16px!important}
   const ts=sec('time');if(ts&&!ts.querySelector('.cvline')){const r=ts.querySelector('.cvrow'),c=ts.querySelector('.tcus');if(r&&c){const ln=document.createElement('div');ln.className='cvline';r.before(ln);ln.append(r,c)}}
   /* 마디: 마디 수 · +/− · 못갖춘마디 한 줄, 현재 상태는 아랫줄 */
   ['meas','meask'].forEach(k=>{const d=sec(k);if(!d||d.querySelector('.cvline'))return;const rs=[...d.querySelectorAll('.cvrow')],bt=d.querySelector('.cvbtns');if(!rs.length)return;const ln=document.createElement('div');ln.className='cvline';rs[0].before(ln);ln.append(rs[0]);if(bt)ln.append(bt);if(rs[1])ln.append(rs[1]);const mc=d.querySelector('.mcount');if(mc)ln.after(mc)});
-  ['meas','meask'].forEach(k=>{const d=sec(k);if(!d)return;d.querySelectorAll('.cvbtns [data-meas="+"]').forEach(b=>b.textContent='+ 마디');d.querySelectorAll('.cvbtns [data-meas="-"]').forEach(b=>b.textContent='− 마디')});
+  ['meas','meask'].forEach(k=>{const d=sec(k);if(!d)return;const u=k==='meask'?'장단':'마디';d.querySelectorAll('.cvbtns [data-meas="+"]').forEach(b=>b.textContent='+ '+u);d.querySelectorAll('.cvbtns [data-meas="-"]').forEach(b=>b.textContent='− '+u)});
  }
  function build(){const dlg=document.getElementById('nsxSetup');if(!dlg)return;lines();sync();
   if(!dlg.dataset.cvFold2){dlg.dataset.cvFold2='1';['hd','staves','pair','nn','gjd'].forEach(k=>{const s=sec(k);if(s)s.open=false});const lay=dlg.querySelector('.cvlay');if(lay)lay.open=false}}
  const hook=()=>{try{build()}catch(e){console.warn(e)}const o=window.syncUI;if(typeof o==='function'&&!o.__v18){const w=function(){const r=o.apply(this,arguments);try{build()}catch(_){}return r};w.__v18=1;Object.keys(o).forEach(k=>{try{w[k]=o[k]}catch(_){}});window.syncUI=w}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(hook,1100));else setTimeout(hook,1100);
  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#nsxSetupBtn'))setTimeout(()=>{try{build()}catch(_){}},120)},true);
+})();
+</script>
+<style id="nsx-v19-css">
+/* 접힌 항목: 제목줄을 눌러 펼치기/접기 */
+#nsxSetup details.psec.cvfold>summary{pointer-events:auto!important;cursor:pointer;display:flex!important;align-items:center;gap:8px;user-select:none;list-style:none}
+#nsxSetup details.psec.cvfold>summary::-webkit-details-marker{display:none}
+#nsxSetup details.psec.cvfold>summary::before{content:''!important;display:block!important;flex:0 0 auto;width:6px;height:6px;border-right:2px solid #5f6b7d;border-bottom:2px solid #5f6b7d;transform:rotate(-45deg);margin:0 4px 0 2px;transition:transform .15s}
+#nsxSetup details.psec.cvfold[open]>summary::before{transform:rotate(45deg);margin-top:-3px}
+#nsxSetup details.psec.cvfold>summary:hover{color:#2f5bd3!important}
+#nsxSetup details.psec.cvfold>summary .qh{margin-left:auto}
+/* 음자리표·조표 그림이 잘리지 않게 */
+#nsxSetup .psec .grid>button[data-clef]{width:56px!important;height:44px!important;padding:3px!important;overflow:visible!important}
+#nsxSetup .psec .grid>button[data-key]{width:70px!important;height:40px!important;padding:3px!important;overflow:visible!important}
+#nsxSetup .psec .grid>button[data-clef] svg{height:31px!important;width:auto!important;max-width:100%;overflow:visible}
+#nsxSetup .psec .grid>button[data-key] svg{height:32px!important;width:auto!important;max-width:100%;overflow:visible}
+</style>
+<script id="nsx-v19-js">
+(()=>{const FOLD=['gjd','hd','staves','pair','nn'];
+ const mark=()=>{const dlg=document.getElementById('nsxSetup');if(!dlg)return;FOLD.forEach(k=>{const d=dlg.querySelector('details.psec[data-k="'+k+'"]');if(d)d.classList.add('cvfold')});const l=dlg.querySelector('details.cvlay');if(l)l.classList.add('cvfold')};
+ const hook=()=>{mark();const o=window.syncUI;if(typeof o==='function'&&!o.__v19){const w=function(){const r=o.apply(this,arguments);try{mark()}catch(_){}return r};w.__v19=1;Object.keys(o).forEach(k=>{try{w[k]=o[k]}catch(_){}});window.syncUI=w}};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(hook,1300));else setTimeout(hook,1300);
+ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#nsxSetupBtn'))setTimeout(mark,150)},true);
+})();
+</script>
+<style id="nsx-v20-css">
+#nsxSetup .psec .grid>button[data-clef]:nth-child(3) svg{transform:translateY(-6px)}
+/* 정간보·장단보 설정: 한 줄씩 정리 */
+#nsxSetup .fform{display:flex;flex-direction:column;gap:7px;margin:4px 0 2px}
+#nsxSetup .frow{display:flex;align-items:center;gap:10px;min-height:32px}
+#nsxSetup .frow>.fl{flex:0 0 100px;white-space:nowrap;font-size:12.5px;color:#5f6b7d}
+#nsxSetup .frow>.fc{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:0}
+#nsxSetup .frow .stp{flex:0 0 auto!important;min-width:0!important;display:inline-flex!important;align-items:center;gap:4px;margin:0!important;padding:0!important;border:0!important;width:auto!important}
+#nsxSetup .frow .stp>span{display:none!important}
+#nsxSetup .frow .stp>button{width:28px!important;height:28px!important;min-height:0!important;padding:0!important}
+#nsxSetup .frow .stp>b{min-width:34px;text-align:center;font-size:13px}
+#nsxSetup .frow #gdinfo{display:none!important}
+#nsxSetup .frow .unit{white-space:nowrap;font-size:12.5px;color:#253042}
+#nsxSetup .frow .mc{margin:0!important;font-size:12px;color:#8a94a6}
+#nsxSetup .frow .cvrow{margin:0;flex:1}
+#nsxSetup .frow .cvrow>span{display:none}
+#nsxSetup .frow .cvrow select{max-width:220px}
+#nsxSetup .frow .tcus{margin:0!important;flex:1;display:flex;gap:6px}
+#nsxSetup .frow .tcus input{flex:1;max-width:200px;height:30px}
+#nsxSetup .frow .tcus button{height:30px!important;padding:0 12px!important}
+#nsxSetup .frow button.fb{height:30px!important;min-height:0!important;padding:0 12px!important;font-size:12.5px!important}
+#nsxSetup .frow .pin{flex:1;min-width:0;max-width:200px;height:30px;border:1px solid #cfd8e5;border-radius:7px;padding:0 8px;font:inherit;font-size:13px}
+#nsxSetup .frow .fsub{font-size:12px;color:#5f6b7d}
+#nsxSetup .fchk{display:flex;align-items:center;gap:6px;font-size:13px;color:#253042;cursor:pointer}
+#nsxSetup .fchk input{width:16px;height:16px;accent-color:#354968}
+#nsxSetup .frow [data-jdu]{width:40px!important;height:34px!important;min-height:0!important;padding:2px!important;display:inline-flex!important;align-items:center;justify-content:center}
+#nsxSetup .frow [data-jdu] svg{height:26px;width:auto}
+#nsxSetup details.ftools{border-top:1px dashed #dbe2ec;margin-top:6px;padding-top:4px}
+#nsxSetup details.ftools>summary{cursor:pointer;font-size:12.5px;color:#5f6b7d;list-style:none;display:flex;align-items:center;gap:6px;padding:4px 0}
+#nsxSetup details.ftools>summary::-webkit-details-marker{display:none}
+#nsxSetup details.ftools>summary::before{content:'';width:6px;height:6px;border-right:2px solid #5f6b7d;border-bottom:2px solid #5f6b7d;transform:rotate(-45deg);transition:transform .15s}
+#nsxSetup details.ftools[open]>summary::before{transform:rotate(45deg)}
+#nsxSetup details.ftools .fbtns{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+#nsxSetup details.ftools .fbtns button{height:30px!important;min-height:0!important;padding:0 12px!important;font-size:12.5px!important}
+#nsxSetup #g-gd>:not(.fform),#nsxSetup #g-jjd>:not(.fform),#nsxSetup #g-jgb>:not(.fform){display:none!important}
+/* 정간보 '1정의 길이' 버튼: 실제 음표 모양 (팔레트 쪽도) */
+[data-jdu] svg{height:26px;width:auto;vertical-align:middle}
+</style>
+<script id="nsx-v20-js">
+(()=>{
+ const sec=k=>document.querySelector('#nsxSetup details.psec[data-k="'+k+'"]');
+ const NOTE={8:[{n:'note8thUp'}],16:[{n:'noteQuarterUp'}],24:[{n:'noteQuarterUp'},{n:'augDot',dx:430,dy:-40}],32:[{n:'noteHalfUp'}]};
+ const NOTEN={8:'8분음표',16:'4분음표',24:'점4분음표',32:'2분음표'};
+ function noteIcons(){document.querySelectorAll('[data-jdu]').forEach(b=>{if(b.dataset.ic)return;const p=NOTE[b.dataset.jdu];if(!p)return;try{b.innerHTML=gsvg(p,{s:.026});b.title='한 정 = '+NOTEN[b.dataset.jdu];b.dataset.ic='1'}catch(e){}})}
+ const row=(label,nodes)=>{const r=document.createElement('div');r.className='frow';r.innerHTML='<span class="fl">'+label+'</span><div class="fc"></div>';const c=r.lastChild;nodes.forEach(n=>{if(!n)return;if(typeof n==='string'){const s=document.createElement('span');s.className='unit';s.textContent=n;c.append(s)}else c.append(n)});return r};
+ const CHK=[];
+ const chk=(label,onSel,offSel,root)=>{const l=document.createElement('label');l.className='fchk';l.innerHTML='<input type="checkbox">'+label;const i=l.querySelector('input');
+  i.addEventListener('change',()=>{const b=root.querySelector(i.checked?onSel:offSel);if(b)b.click()});CHK.push(()=>{const b=root.querySelector(onSel);i.checked=!!(b&&b.classList.contains('on'))});return l};
+ const q=(root,s)=>root.querySelector(s);
+ const stp=(root,k)=>{const b=root.querySelector('[data-gstep="'+k+'-"]');return b?b.closest('.stp'):null};
+ function tidyGd(){const g=document.querySelector('#nsxSetup #g-gd');if(!g||g.querySelector('.fform'))return;const f=document.createElement('div');f.className='fform';
+  const ti=q(g,'.tcus input');if(ti)ti.placeholder='예: 3+2+2+3';
+  f.append(row('자주 쓰는 장단',[q(g,'.cvrow')]),row('박 · 소박',[stp(g,'gb'),'박 ×',stp(g,'gs'),'소박',q(g,'#gdinfo')]),row('대강',[q(g,'.tcus')]),row('',[chk('리듬보 함께 보기','[data-lnk="1"]','[data-lnk="0"]',g)]));
+  g.prepend(f)}
+ function tidyJjd(){const g=document.querySelector('#nsxSetup #g-jjd');if(!g||g.querySelector('.fform'))return;const f=document.createElement('div');f.className='fform';
+  const du=[...g.querySelectorAll('[data-jdu]')];
+  f.append(row('자주 쓰는 장단',[q(g,'.cvrow')]),row('한 정의 길이',du),row('',[chk('오선보 함께 보기','[data-lnk="1"]','[data-lnk="0"]',g)]));g.prepend(f)}
+ function tidyJgb(){const g=document.querySelector('#nsxSetup #g-jgb');if(!g||g.querySelector('.fform'))return;const f=document.createElement('div');f.className='fform';
+  const or=[...g.querySelectorAll('[data-jorient]')];or.forEach(b=>b.classList.add('fb'));
+  const ti=q(g,'.tcus input');if(ti)ti.placeholder='예: 3+2+3+2';
+  const t1=q(g,'#jTitle'),t2=q(g,'#jSub');
+  const sp1=document.createElement('span');sp1.className='fsub';sp1.textContent='한 쪽 줄 수';
+  f.append(row('쓰는 방향',or),row('한 장단의 정 수',[stp(g,'gb')]),row('대강 (마디금)',[q(g,'.tcus')]),row('마디금 간격',[stp(g,'gd'),'정마다 (모든 각)']),
+   row('한 줄 장단 수',[stp(g,'jk'),sp1,stp(g,'jp')]),row('',[chk('가사 칸 넣기','[data-jlyc="1"]','[data-jlyc="0"]',g)]),row('제목 · 부제',[t1,t2]));
+  /* 편집 도구는 접어 두기 */
+  const tools=document.createElement('details');tools.className='ftools';tools.innerHTML='<summary>편집 도구 (정·장단 끼우기·지우기, 마디금·끝금·숨표)</summary><div class="fbtns"></div>';
+  const fb=tools.querySelector('.fbtns');['[data-jgins]','[data-jgdel]','[data-meas="+"]','[data-meas="-"]','[data-jgrow]','[data-jgrdel]','[data-jgline]','[data-jgend]','[data-jgbr]'].forEach(s=>{const b=q(g,s);if(b)fb.append(b)});
+  f.append(tools);g.prepend(f)}
+ function build(){noteIcons();if(!document.getElementById('nsxSetup'))return;tidyGd();tidyJjd();tidyJgb();CHK.forEach(fn=>{try{fn()}catch(_){}})}
+ const hook=()=>{try{build()}catch(e){console.warn(e)}const o=window.syncUI;if(typeof o==='function'&&!o.__v20){const w=function(){const r=o.apply(this,arguments);try{build()}catch(_){}return r};w.__v20=1;Object.keys(o).forEach(k=>{try{w[k]=o[k]}catch(_){}});window.syncUI=w}};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(hook,1400));else setTimeout(hook,1400);
+ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#nsxSetupBtn'))setTimeout(()=>{try{build()}catch(_){}},160)},true);
 })();
 </script>
